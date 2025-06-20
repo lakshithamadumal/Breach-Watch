@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Have I Been Pwned? (Prank)</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent-color: #ff4d4d;
+            --input-bg: #2d2d2d;
+            --input-border: #3d3d3d;
+            --button-bg: #ff4d4d;
+            --button-hover: #ff3333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .input-group {
+            position: relative;
+            width: 100%;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 5px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="email"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .result-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+            color: var(--accent-color);
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .result-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .breach-list {
+            margin-top: 20px;
+        }
+
+        .breach-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--input-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breach-item:last-child {
+            border-bottom: none;
+        }
+
+        .breach-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .breach-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .breach-count {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--accent-color);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            margin-top: 50px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .result-container {
+                padding: 15px;
+            }
+            
+            .breach-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Have I Been Pwned?</h1>
+        <p class="subtitle">Check if your email has been compromised in a data breach</p>
+    </header>
+
+    <div class="search-container">
+        <div class="search-box">
+            <div class="input-group">
+                <input type="email" id="emailInput" placeholder="Enter your email address" required>
+            </div>
+            <button id="checkButton">Check Now</button>
+        </div>
+    </div>
+
+    <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <p>Checking breaches...</p>
+    </div>
+
+    <div class="result-container" id="resultContainer">
+        <div class="result-header">
+            <div class="result-icon">⚠️</div>
+            <div>
+                <div class="result-title" id="resultTitle">Oh no — pwned!</div>
+                <div class="result-subtitle" id="resultSubtitle"></div>
+            </div>
+        </div>
+        <div class="breach-list" id="breachList"></div>
+    </div>
+
+    <footer>
+        <p>This is a prank website. No real data is being checked or stored.</p>
+    </footer>
+
+    <script>
+        // Database to store fake breach data
+        const fakeDatabase = JSON.parse(localStorage.getItem('fakeBreachDatabase')) || {};
+
+        // Common data breaches for realism
+        const commonBreaches = [
+            { name: "Adobe", date: "2013-10-04" },
+            { name: "LinkedIn", date: "2012-05-05" },
+            { name: "MySpace", date: "2013-10-04" },
+            { name: "Dropbox", date: "2012-07-01" },
+            { name: "Yahoo", date: "2013-08-01" },
+            { name: "Facebook", date: "2018-09-01" },
+            { name: "Twitter", date: "2018-05-01" },
+            { name: "Marriott International", date: "2018-11-30" },
+            { name: "Quora", date: "2018-11-30" },
+            { name: "Canva", date: "2019-05-24" }
+        ];
+
+        // Generate random breach data for an email
+        function generateBreaches(email) {
+            // If email exists in our fake database, return that data
+            if (fakeDatabase[email]) {
+                return fakeDatabase[email];
+            }
+
+            // Otherwise generate new random data
+            const breachCount = Math.floor(Math.random() * 6) + 1; // 1-6 breaches
+            const selectedBreaches = [];
+            
+            // Shuffle array and pick first breachCount elements
+            const shuffled = [...commonBreaches].sort(() => 0.5 - Math.random());
+            for (let i = 0; i < breachCount; i++) {
+                selectedBreaches.push({
+                    ...shuffled[i],
+                    count: Math.floor(Math.random() * 9000000) + 1000000 // 1M-10M records
+                });
+            }
+
+            // Save to our fake database
+            fakeDatabase[email] = {
+                email: email,
+                breaches: selectedBreaches,
+                totalBreaches: breachCount
+            };
+            
+            localStorage.setItem('fakeBreachDatabase', JSON.stringify(fakeDatabase));
+            
+            return fakeDatabase[email];
+        }
+
+        // Display results
+        function displayResults(email) {
+            const resultContainer = document.getElementById('resultContainer');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSubtitle = document.getElementById('resultSubtitle');
+            const breachList = document.getElementById('breachList');
+            
+            const data = generateBreaches(email);
+            
+            if (data.totalBreaches > 0) {
+                resultTitle.textContent = "Oh no — pwned!";
+                resultSubtitle.textContent = `This email address has been found in ${data.totalBreaches} data breach${data.totalBreaches > 1 ? 'es' : ''}. Review the details below to see where your data was exposed.`;
+                
+                breachList.innerHTML = '';
+                data.breaches.forEach(breach => {
+                    const breachItem = document.createElement('div');
+                    breachItem.className = 'breach-item';
+                    breachItem.innerHTML = `
+                        <div>
+                            <div class="breach-name">${breach.name}</div>
+                            <div class="breach-date">Breach date: ${breach.date}</div>
+                        </div>
+                        <div class="breach-count">${breach.count.toLocaleString()} records</div>
+                    `;
+                    breachList.appendChild(breachItem);
+                });
+            } else {
+                resultTitle.textContent = "Good news — no pwnage found!";
+                resultSubtitle.textContent = "No breached accounts found for this email address.";
+                breachList.innerHTML = '';
+            }
+            
+            document.getElementById('loadingIndicator').style.display = 'none';
+            resultContainer.style.display = 'block';
+        }
+
+        // Event listeners
+        document.getElementById('checkButton').addEventListener('click', function() {
+            const email = document.getElementById('emailInput').value.trim();
+            
+            if (email && email.includes('@')) {
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('resultContainer').style.display = 'none';
+                
+                // Simulate network delay
+                setTimeout(() => {
+                    displayResults(email);
+                }, 1500);
+            } else {
+                alert('Please enter a valid email address');
+            }
+        });
+
+        // Allow pressing Enter in the input field
+        document.getElementById('emailInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('checkButton').click();
+            }
+        });
+    </script>
+</body>
+</html>
